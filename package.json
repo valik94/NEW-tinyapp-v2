@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/valik94/NEW-tinyapp-v2/issues"
   },
-  "homepage": "https://github.com/valik94/NEW-tinyapp-v2#readme"
+  "homepage": "https://github.com/valik94/NEW-tinyapp-v2#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
