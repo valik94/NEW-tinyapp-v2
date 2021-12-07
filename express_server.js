@@ -70,3 +70,12 @@ app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL);
 });
+
+//deleting line in /urls table
+app.post("/urls/:shortURL/delete", (req,res) =>{
+  const shortUrl = req.params.shortURL;
+  // const longurl = req.body.longURL;
+  // urlDatabase[shorturl] = longurl;
+  delete urlDatabase[shortUrl];
+  res.redirect("/urls");
+})
