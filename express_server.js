@@ -33,3 +33,9 @@ app.get("/hello", (req, res) => {
   const templateVars = { greeting: 'Hello World!' };
   res.render("hello_world", templateVars);
 });
+app.get("/urls/:shortURL", (req, res) =>{
+  const shorturl = req.params.shortURL;
+  const longurl = urlDatabase[shorturl];
+  const templateVars = {shortURL: shorturl, longURL: longurl}
+  res.render('urls_show',templateVars)
+})
