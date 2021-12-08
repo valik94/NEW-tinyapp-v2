@@ -2,9 +2,11 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 app.set("view engine", "ejs"); //set view engine to EJS
+const cookieParser = require('cookie-parser')
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -37,23 +39,32 @@ app.get("/urls.json", (req, res) => {
 // });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { 
+    urls: urlDatabase,
+    username: req.cookies["username"]
+  };
+  console.log(templateVars);
   res.render("urls_index", templateVars);
 });
 
 app.get("/hello", (req, res) => {
-  const templateVars = { greeting: 'Hello World!' };
+  const templateVars = { greeting: 'Hello World!'};
   res.render("hello_world", templateVars);
 });
 //get request to display/render /urls/new page
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {username : req.cookies["username"]}
+  res.render("urls_new",templateVars );
 });
 // get request to display /urls/shortURL page
 app.get("/urls/:shortURL", (req, res) =>{
   const shorturl = req.params.shortURL;
   const longurl = urlDatabase[shorturl];
-  const templateVars = {shortURL: shorturl, longURL: longurl}
+  const templateVars = {
+    shortURL: shorturl,
+    longURL: longurl,
+    username: req.cookies["username"]
+  }
   res.render('urls_show',templateVars)
 })
 //post request to update urlDatabase and redirect us to the shorturl created
@@ -88,3 +99,17 @@ app.post("/urls/:shortURL", (req,res) =>{
   urlDatabase[shortUrl] = longUrl;
   res.redirect("/urls");
 })
+//Login route using username and cookie
+app.post("/login", (req, res)=>{
+  const username  = req.body.username;
+  res.cookie("username", username ) //res.cookie(name, value [, options])
+  res.redirect("/urls");
+})
+//Login get route
+app.post("/logout", (req, res) =>{
+  const username = req.body.username;
+  res.clearCookie("username", username);
+  res.redirect("/urls");
+})
+
+
