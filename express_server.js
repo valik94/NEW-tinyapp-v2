@@ -46,6 +46,14 @@ const registerUser = function registerUser(users, userEmail){
   }
   return false;
 };
+const getUserByEmail = function (users, userEmail, userPassword){
+  for (let user in users){
+    if (users[user].email === userEmail){
+      return users[user];
+    }
+  }
+  return null;
+};
 
 
 //home hello
@@ -114,12 +122,14 @@ app.get("/register" , (req, res ) =>{
   const password = req.body.password;
   const user = users[req.cookies.user_id]
   let templateVars = {email: email, password: password, user: user, urls: urlDatabase }
-  res.render('urls_index', templateVars)
+  res.render('register', templateVars)
 })
 
 //LOGIN GET ROUTE Keep it simple - tell me who you are
 app.get('/login', (req, res) =>{
-  
+  const user = users[req.cookies.user_id]
+  let templateVars = {user}
+    res.render('login', templateVars) 
 })
 
 
@@ -142,13 +152,24 @@ app.post("/urls/:shortURL", (req,res) =>{
 })
 //Login route using (old: username), now user and cookie
 app.post("/login", (req, res)=>{
-  const user  = req.cookies.user_id;
+  // const user  = req.cookies.user_id;
   const userEmail = req.body.email;
   const userPassword = req.body.password;
-  let templateVars = {email: userEmail, password: userPassword, user: user}
-  res.cookie("user_id", templateVars) //res.cookie(name, value [, options])
-  res.redirect("/urls");
+  const userFound = getUserByEmail(users, userEmail);
+  //res.send("ok");
+
+  if (!userFound) { //no user found
+    return res.status(403).send("no user was found")
+  }
+  if (userPassword !== userFound.password){ //if email found and password does not match return 403 status code
+    return res.status(403).send("email or password is incorrect")
+    
+  }
+    //let templateVars = {email: userEmail, password: userPassword, user: user}
+    res.cookie("user_id", userFound.id) //res.cookie(name, value [, options])
+    res.redirect("/urls");
 })
+
 //Logout get route
 app.post("/logout", (req, res) =>{
   console.log('logged out: ',req.cookies.user_id)
