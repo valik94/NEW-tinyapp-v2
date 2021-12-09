@@ -17,12 +17,14 @@
               <form method = "POST" action = '/register'> 
                 <input type = 'email' name='email' placeholder="Enter Email">
                 <input type = 'password' name='password' placeholder="Enter Password">
-                <button type="submit" class="btn border border-dark">Login</button>
+                <button type="submit" class="btn border border-dark">Register</button> 
+                <a class = "btn btn-primary btn-lg active" href = "/login" >Login</a>
               </form>
+          
           <!-- <form method="POST" action="/login/">
             <input name='username' placeholder="Enter Username"> 
             <button type="submit" class="btn border border-dark">Login</button>
-          </form> -->
+          </form>  -->
           <% } else { %>
             
           <form method="POST" action="/logout/">

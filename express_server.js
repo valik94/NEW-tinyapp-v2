@@ -92,6 +92,7 @@ app.get("/urls/:shortURL", (req, res) =>{
   }
   res.render('urls_show',templateVars)
 })
+
 //post request to update urlDatabase and redirect us to the shorturl created
 app.post("/urls", (req, res) => {
   const shorturl = generateRandomString();
@@ -116,6 +117,12 @@ app.get("/register" , (req, res ) =>{
   res.render('urls_index', templateVars)
 })
 
+//LOGIN GET ROUTE Keep it simple - tell me who you are
+app.get('/login', (req, res) =>{
+  
+})
+
+
 //deleting line in /urls table
 app.post("/urls/:shortURL/delete", (req,res) =>{
   const shortUrl = req.params.shortURL;
@@ -136,14 +143,17 @@ app.post("/urls/:shortURL", (req,res) =>{
 //Login route using (old: username), now user and cookie
 app.post("/login", (req, res)=>{
   const user  = req.cookies.user_id;
-  res.cookie("user_id", user ) //res.cookie(name, value [, options])
+  const userEmail = req.body.email;
+  const userPassword = req.body.password;
+  let templateVars = {email: userEmail, password: userPassword, user: user}
+  res.cookie("user_id", templateVars) //res.cookie(name, value [, options])
   res.redirect("/urls");
 })
-//Login get route
+//Logout get route
 app.post("/logout", (req, res) =>{
   console.log('logged out: ',req.cookies.user_id)
   const user = req.cookies.user_id;
-  res.clearCookie("user", user);
+  res.clearCookie("user_id", user);
   res.redirect("/urls");
 })
 
@@ -165,6 +175,7 @@ if (registerUser(users, userEmail)){
   return res.send("Email is already registered to a user.")
 }
 users[userID] = userValue;
+console.log(users)
 res.cookie("user_id", userID)
 //let templateVar = {user: userValue}
 res.redirect("/urls");
