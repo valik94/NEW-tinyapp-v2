@@ -10,16 +10,23 @@
           <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
         </div>
           <div class = "w-75 text-right">
-            <% if (!username) { %>
-              <% console.log(username) %>
-          <form method="POST" action="/login/">
+            
+            <% if (!user) { %>
+              <% console.log(user) %>
+              <!-- EMAIL AND PASSWORD -->
+              <form method = "POST" action = '/register'> 
+                <input type = 'email' name='email' placeholder="Enter Email">
+                <input type = 'password' name='password' placeholder="Enter Password">
+                <button type="submit" class="btn border border-dark">Login</button>
+              </form>
+          <!-- <form method="POST" action="/login/">
             <input name='username' placeholder="Enter Username"> 
             <button type="submit" class="btn border border-dark">Login</button>
-          </form>
+          </form> -->
           <% } else { %>
             
           <form method="POST" action="/logout/">
-          <span> Logged in as Tinyapp user: <%= username %> </span>
+          <span> Logged in as Tinyapp user: <%= user.email %> </span>
           <button type="submit" class="btn border border-dark">Logout</button>
         </form>
           <% } %>
