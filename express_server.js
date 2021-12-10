@@ -2,19 +2,17 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 app.set("view engine", "ejs"); //set view engine to EJS
-// const cookieParser = require('cookie-parser');
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 
-const {generateRandomString, registerUser, getUserByEmail, urlsForUser} = require('./helpers')
+const {generateRandomString, registerUser, getUserByEmail, urlsForUser} = require('./helpers');
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
-// app.use(cookieParser());
 app.use(cookieSession({
   name: 'user_id',
   keys: ['publickey','privatekey']
-}))
+}));
 
 //URL DATABASE -- NEW
 const urlDatabase = {
@@ -46,44 +44,43 @@ const users = {
   }
 };
 
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
 
+/* GET ROUTES */
 
 //home hello
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+//hello page
+app.get("/hello", (req, res) => {
+  const templateVars = { greeting: 'Hello World!'};
+  res.render("hello_world", templateVars);
 });
+
 //display all urls in JSON format
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
-//urls page renders urls_Index table and passes urldatabase and users database to render
 
+//urls page renders urls_Index table and passes urldatabase and users database to render
 app.get("/urls", (req, res) => {
   const userId = req.session.user_id;
-  console.log("USER ID IS: ", userId);
-  console.log("URLSDATABASE: ", urlDatabase);
   if (userId) {
     const urlUserObject = urlsForUser(userId, urlDatabase);
     const templateVars = {
       urls: urlUserObject,
       user: users[req.session.user_id] //req.cookies.user_id fetches the cookie which is labelled user_id
     };
-    console.log('this is req cookies',req.session.user_id);
-    console.log(templateVars);
     return res.render("urls_index", templateVars);
   }
   res.redirect("/login");
 
 });
-//hello page
-app.get("/hello", (req, res) => {
-  const templateVars = { greeting: 'Hello World!'};
-  res.render("hello_world", templateVars);
-});
+
 //get request to display/render /urls/new page
 app.get("/urls/new", (req, res) => {
   const userwebid = req.session.user_id;
@@ -98,7 +95,6 @@ app.get("/urls/new", (req, res) => {
 // get request to display /urls/shortURL page
 app.get("/urls/:shortURL", (req, res) =>{
   const userId = req.session.user_id;
-  console.log("USER ID IS: ", userId);
   const shorturl = req.params.shortURL;
   if (userId && urlDatabase[shorturl].userID === userId) {
     const longurl = urlDatabase[shorturl].longURL;
@@ -109,23 +105,13 @@ app.get("/urls/:shortURL", (req, res) =>{
   }
 });
 
-//post request to update urlDatabase and redirect us to the shorturl created
-app.post("/urls", (req, res) => {
-  const userId = req.session.user_id;
-  const shorturl = generateRandomString();
-  const longurl = req.body.longURL;
-  urlDatabase[shorturl] = {longURL: longurl, userID: userId};
-  console.log(req.body);  // Log the POST
-  res.redirect(`/urls/${shorturl}`);    // Respond with 'redirect'
-
-});
 //get request to display on URL bar the /u/shortURL (generated) and if pressed to redirect to longurl stored (i.e. http://www.google.com)
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
-//REGISTER ROUTE
+//REGISTER GET ROUTE renders the register page
 app.get("/register" , (req, res) =>{
   const email = req.body.email;
   const password = req.body.password;
@@ -142,10 +128,21 @@ app.get('/login', (req, res) =>{
 });
 
 
-//deleting line in /urls table
+/* POST ROUTES */
+
+//post request to update urlDatabase and redirect us to the shorturl created
+app.post("/urls", (req, res) => {
+  const userId = req.session.user_id;
+  const shorturl = generateRandomString();
+  const longurl = req.body.longURL;
+  urlDatabase[shorturl] = {longURL: longurl, userID: userId};
+  res.redirect(`/urls/${shorturl}`);    // Respond with 'redirect' to shorturl updating page
+
+});
+
+//POST Route to deleting line in /urls table
 app.post("/urls/:shortURL/delete", (req,res) =>{
   const shortUrl = req.params.shortURL;
-  console.log("REQUEST PARAMS IS THIS: ", req.params)
   const userId = req.session.user_id;
   if (userId && urlDatabase[shortUrl].userID === userId) {
     delete urlDatabase[shortUrl];
@@ -154,7 +151,7 @@ app.post("/urls/:shortURL/delete", (req,res) =>{
   res.status(401).send("This user is not allowed to delete this.");
 });
 
-//update New longurl in body
+//POST ROUTE FOR shortURL to update New longurl in body
 app.post("/urls/:shortURL", (req,res) =>{
   const userId = req.session.user_id;
   const shortUrl = req.params.shortURL;
@@ -181,20 +178,18 @@ app.post("/login", (req, res)=>{
     
   }
   //let templateVars = {email: userEmail, password: userPassword, user: user}
-  req.session.user_id = userFound.id; //res.cookie(name, value [, options])
+  req.session.user_id = userFound.id;
   res.redirect("/urls");
 });
 
-//Logout get route
+//POST ROUTE Logout to nullify session and redirect to /urls page
 app.post("/logout", (req, res) =>{
-  console.log('logged out: ',req.session.user_id);
   const user = req.session.user_id;
-  // res.clearCookie("user_id", user);
   req.session = null;
   res.redirect("/urls");
 });
 
-//REGISTER post route
+//REGISTER post route to check if user registered via email/password and encrypt password in storage
 app.post('/register', (req, res) =>{
   let userID = generateRandomString();
   let userEmail = req.body.email;
@@ -202,20 +197,17 @@ app.post('/register', (req, res) =>{
   const hashedPassword = bcrypt.hashSync(userPassword, 10);
   let userValue = { id: userID, email: userEmail, password: hashedPassword};
 
-  if (userEmail === "" || userPassword === "") {
+  if (userEmail === "" || userPassword === "") { //initial check if username and password is empty
     res.status(400);
     return res.send("User's password and/or email is missing");
   }
-  console.log('DATABASE user email is!!! ', users[userID.email]);
-  console.log('userEMAIL INPUT user email is!!! ', userEmail);
-  if (registerUser(users, userEmail)) {
+ 
+  if (registerUser(users, userEmail)) { //check if user is already registered
     res.status(400);
     return res.send("Email is already registered to a user.");
   }
   users[userID] = userValue;
-  console.log(users);
-  req.session.user_id = userID
-  //let templateVar = {user: userValue}
+  req.session.user_id = userID;
   res.redirect("/urls");
 });
 

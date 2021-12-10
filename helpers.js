@@ -9,8 +9,7 @@ function generateRandomString() {
   return string;
 }
 
-//CHECK IF USER IS REGISTERED
-
+//CHECK IF USER IS REGISTERED and return true if registered or false if not
 const registerUser = function registerUser(users, userEmail) {
   for (let user in users) {
     if (users[user].email === userEmail) {
@@ -20,6 +19,7 @@ const registerUser = function registerUser(users, userEmail) {
   return false;
 };
 
+//CHECK IF USER IN DATABASEUSERS and return User object
 const getUserByEmail = function(users, userEmail) {
   for (let user in users) {
     if (users[user].email === userEmail) {
@@ -28,7 +28,7 @@ const getUserByEmail = function(users, userEmail) {
   }
   return undefined;
 };
-
+//input userid and urldatabase and returns new object with urls pertaining to that user.
 const urlsForUser = function(userid, urlDatabase) {
   const newObjectDatabase = {};
   for (let obj in urlDatabase) {
