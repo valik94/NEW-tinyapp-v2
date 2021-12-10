@@ -17,6 +17,10 @@ const urlDatabase = {
   i3BoGr: {
       longURL: "https://www.google.ca",
       userID: "aJ48lW"
+  },
+  sgq3y6:{
+    longURL: 'http://www.youtube.com',
+    userID: 'sgq3y6'
   }
 };
 
@@ -66,7 +70,7 @@ const urlsForUser = function (userid, urlDatabase) {
   const newObjectDatabase ={};
   for (let obj in urlDatabase){
     console.log("object in urldDatabase", urlDatabase)
-    if(urlDatabase(obj).user_id === userid){
+    if(urlDatabase[obj].userID === userid){
       newObjectDatabase[obj] = urlDatabase[obj];
     }
   }
@@ -91,6 +95,7 @@ app.get("/urls.json", (req, res) => {
 app.get("/urls", (req, res) => { 
   const userId = req.cookies.user_id;
   console.log("USER ID IS: ", userId);
+  console.log("URLSDATABASE: ", urlDatabase);
   if (userId){
     const urlUserObject = urlsForUser(userId, urlDatabase)
     const templateVars = { 
@@ -99,7 +104,7 @@ app.get("/urls", (req, res) => {
     };
     console.log('this is req cookies',req.cookies.user_id);
     console.log(templateVars);
-    res.render("urls_index", templateVars);
+    return res.render("urls_index", templateVars);
   }
 res.send("user is not logged in please login!")
 //res.redirect('/login')
@@ -124,18 +129,25 @@ app.get("/urls/new", (req, res) => {
 });
 // get request to display /urls/shortURL page
 app.get("/urls/:shortURL", (req, res) =>{
+  const userId = req.cookies.user_id;
+  console.log("USER ID IS: ", userId);
   const shorturl = req.params.shortURL;
+  if (userId && urlDatabase[shorturl].userID === userId){
   const longurl = urlDatabase[shorturl].longURL;
   const templateVars = { shortURL: shorturl, longURL: longurl,user: users[req.cookies.user_id] }
   res.render('urls_show',templateVars)
+  }
+  else{
+    res.send("You are not allowed to access this page.")
+  }
 })
 
 //post request to update urlDatabase and redirect us to the shorturl created
 app.post("/urls", (req, res) => {
-    const userId = req.session.user_id;
+    const userId = req.cookies.user_id;
     const shorturl = generateRandomString();
     const longurl = req.body.longURL;
-    urlDatabase[shorturl] = longurl;
+    urlDatabase[shorturl] = {longURL: longurl, userID: userId}
     console.log(req.body);  // Log the POST 
   res.redirect(`/urls/${shorturl}`);    // Respond with 'redirect'
 
@@ -166,21 +178,24 @@ app.get('/login', (req, res) =>{
 //deleting line in /urls table
 app.post("/urls/:shortURL/delete", (req,res) =>{
   const shortUrl = req.params.shortURL;
-  // const longurl = req.body.longURL;
-  // urlDatabase[shorturl] = longurl;
+  const userId = req.cookies.user_id;
+  if (userId && urlDatabase[shorturl].userID === userId){
   delete urlDatabase[shortUrl];
-  res.redirect("/urls");
+  return res.redirect("/urls");
+  }
+  res.status(401).send("This user is not allowed to delete this.")
 })
 
 //update New longurl in body
 app.post("/urls/:shortURL", (req,res) =>{
+  const userId = req.cookies.user_id;
   const shortUrl = req.params.shortURL;
+  if (userId && urlDatabase[shorturl].userID === userId){
   const longUrl =req.body.updatedLongURL;
-  // console.log("LONG URL BODY IS-------------------------", longUrl)
-  // const longurl = req.body.longURL;
   urlDatabase[shortUrl].longURL = longUrl;
-  // console.log('+++++++++++++++', urlDatabase)
-  res.redirect("/urls");
+  return res.redirect("/urls");
+  }
+  res.status(401).send("Not allowed to access this shortURL.")
 })
 
 //Login route using (old: username), now user and cookie
